@@ -80,8 +80,8 @@
 
 #define MY_GATEWAY_ESP8266
 
-#define MY_ESP8266_SSID "***"
-#define MY_ESP8266_PASSWORD "*****"
+#define MY_ESP8266_SSID "JMN"
+#define MY_ESP8266_PASSWORD "jaime1984"
 
 // Set the hostname for the WiFi Client. This is the hostname
 // it will pass to the DHCP server if not static.
@@ -108,10 +108,10 @@
 //#define MY_CONTROLLER_IP_ADDRESS 192, 168, 178, 68
 
 // Enable inclusion mode
-//#define MY_INCLUSION_MODE_FEATURE
+#define MY_INCLUSION_MODE_FEATURE
 
 // Enable Inclusion mode button on gateway
-//#define MY_INCLUSION_BUTTON_FEATURE 
+#define MY_INCLUSION_BUTTON_FEATURE 
 // Set inclusion mode duration (in seconds)
 #define MY_INCLUSION_MODE_DURATION 60
 // Digital pin used for inclusion mode button
@@ -160,20 +160,16 @@ void setup()
 			Serial.println("End Failed");
 		}
 	});
+  sleep(10);
 	ArduinoOTA.begin();
 	Serial.println("Ready");
 	Serial.println("IP address: ");
+ sleep(10);
 	Serial.println(WiFi.localIP());
-}
+ sleep(10);
+  Serial.println("Exiting Setup");
+  wdt_disable();
 
-void receive(const MyMessage &message)
-{
-    // We only expect one type of message from controller. But we better check anyway.
-    if (message.type==V_CUSTOM) {
-        // Write some debug info
-        Serial.print("Incoming custom request:");
-        Serial.print(message.getString());
-    }
 }
 
 void presentation()
@@ -187,4 +183,6 @@ void loop()
 {
 	// Send locally attech sensors data here
 	ArduinoOTA.handle();
+  delay(10);
+    wdt_disable();
 }

@@ -1,0 +1,99 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Libraries">
+      <UniqueIdentifier>{3d098562-0a29-459e-a241-d55d2d03e58a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Timer">
+      <UniqueIdentifier>{59c326fe-5cdc-4f95-a81e-fc11af60f549}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UnitTests">
+      <UniqueIdentifier>{99fedb31-cb68-417f-8368-32e137576243}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UnitTests\Timer">
+      <UniqueIdentifier>{e13e5654-b5c7-4896-938d-38ead087debf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\StopWatch">
+      <UniqueIdentifier>{f7091965-d0a0-4f73-8a04-39596d3c77e3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UnitTests\StopWatch">
+      <UniqueIdentifier>{5e3b3c67-2836-4245-9974-983891d90168}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\TimeScheduler">
+      <UniqueIdentifier>{8241f42e-eb61-45f9-9aec-efbb7fb1ae13}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Time">
+      <UniqueIdentifier>{374a6a49-98d2-4fbb-9843-d88bc115100f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UnitTests\Time">
+      <UniqueIdentifier>{e5252908-e153-4804-9c9a-368da7aef421}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="AduinoLibraries.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UnitTests\Timer\TimerUnitTest.cpp">
+      <Filter>UnitTests\Timer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libs\Timer\Timer.cpp">
+      <Filter>Libraries\Timer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libs\StopWatch\StopWatch.cpp">
+      <Filter>Libraries\StopWatch</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UnitTests\StopWatch\StopWatchUnitTest.cpp">
+      <Filter>UnitTests\StopWatch</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libs\TimeScheduler\TimeScheduler.cpp">
+      <Filter>Libraries\TimeScheduler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Libs\Time\Time.cpp">
+      <Filter>Libraries\Time</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UnitTests\Time\TimeUnitTest.cpp">
+      <Filter>UnitTests\Time</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\Libs\Timer\Timer.h">
+      <Filter>Libraries\Timer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libs\Timer\TimerConfig.h">
+      <Filter>Libraries\Timer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libs\StopWatch\StopWatch.h">
+      <Filter>Libraries\StopWatch</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libs\StopWatch\StopWatchConfig.h">
+      <Filter>Libraries\StopWatch</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libs\TimeScheduler\TimeScheduler.h">
+      <Filter>Libraries\TimeScheduler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libs\Time\Time.h">
+      <Filter>Libraries\Time</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Libs\Time\TimeLib.h">
+      <Filter>Libraries\Time</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
