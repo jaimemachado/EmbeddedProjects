@@ -89,7 +89,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;__UNITTEST__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)../Libs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)../UnitTests;$(SolutionDir)../Libs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -154,10 +154,12 @@
     <ClCompile Include="..\..\Libs\Timer\Timer.cpp" />
     <ClCompile Include="..\..\Libs\TimeScheduler\TimeScheduler.cpp" />
     <ClCompile Include="..\..\Libs\Time\Time.cpp" />
+    <ClCompile Include="..\..\UnitTests\Mocks\EEPROMWin.cpp" />
     <ClCompile Include="..\..\UnitTests\StopWatch\StopWatchUnitTest.cpp" />
     <ClCompile Include="..\..\UnitTests\Timer\TimerUnitTest.cpp" />
     <ClCompile Include="..\..\UnitTests\Time\TimeUnitTest.cpp" />
     <ClCompile Include="AduinoLibraries.cpp" />
+    <ClCompile Include="TimeSchedulerUnitTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -170,6 +172,7 @@
     <ClInclude Include="..\..\Libs\TimeScheduler\TimeScheduler.h" />
     <ClInclude Include="..\..\Libs\Time\Time.h" />
     <ClInclude Include="..\..\Libs\Time\TimeLib.h" />
+    <ClInclude Include="..\..\UnitTests\Mocks\EEPROMWin.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

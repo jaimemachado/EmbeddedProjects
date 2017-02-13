@@ -250,26 +250,20 @@ time_t sysUnsyncedTime = 0; // the time sysTime unadjusted by sync
 
 time_t now() {
 	// calculate number of seconds passed since last call to now()
-  while (millis() - prevMillis >= 1000) {
+	while (millis() - prevMillis >= 1000) {
 		// millis() and prevMillis are both unsigned ints thus the subtraction will always be the absolute value of the difference
-    sysTime++;
-    prevMillis += 1000;	
+		sysTime++;
+		prevMillis += 1000;
 #ifdef TIME_DRIFT_INFO
-    sysUnsyncedTime++; // this can be compared to the synced time to measure long term drift     
+		sysUnsyncedTime++; // this can be compared to the synced time to measure long term drift     
 #endif
-  }
-  if (nextSyncTime <= sysTime) {
-    if (getTimePtr != 0) {
-      time_t t = getTimePtr();
-      if (t != 0) {
-        setTime(t);
-      } else {
-        nextSyncTime = sysTime + syncInterval;
-        Status = (Status == timeNotSet) ?  timeNotSet : timeNeedsSync;
-      }
-    }
-  }  
-  return (time_t)sysTime;
+	}
+	if (nextSyncTime <= sysTime) {
+		nextSyncTime = sysTime + syncInterval;
+		Status = (Status == timeNotSet) ? timeNotSet : timeNeedsSync;
+
+	}
+	return (time_t)sysTime;
 }
 
 void setTime(time_t t) { 
@@ -308,12 +302,6 @@ void adjustTime(long adjustment) {
 timeStatus_t timeStatus() {
   now(); // required to actually update the status
   return Status;
-}
-
-void setSyncProvider( getExternalTime getTimeFunction){
-  getTimePtr = getTimeFunction;  
-  nextSyncTime = sysTime;
-  now(); // this will sync the clock
 }
 
 void setSyncInterval(time_t interval){ // set the number of seconds between re-sync

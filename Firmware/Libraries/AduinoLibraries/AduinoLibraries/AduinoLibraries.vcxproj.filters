@@ -40,6 +40,12 @@
     <Filter Include="UnitTests\Time">
       <UniqueIdentifier>{e5252908-e153-4804-9c9a-368da7aef421}</UniqueIdentifier>
     </Filter>
+    <Filter Include="UnitTests\Mocks">
+      <UniqueIdentifier>{9865d9c4-0cdc-498d-a765-eb75944956c8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UnitTests\TimeScheduler">
+      <UniqueIdentifier>{d6daf37f-085b-42cc-beda-c4f4232783c0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -69,6 +75,12 @@
     <ClCompile Include="..\..\UnitTests\Time\TimeUnitTest.cpp">
       <Filter>UnitTests\Time</Filter>
     </ClCompile>
+    <ClCompile Include="TimeSchedulerUnitTest.cpp">
+      <Filter>UnitTests\TimeScheduler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\UnitTests\Mocks\EEPROMWin.cpp">
+      <Filter>UnitTests\Mocks</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -94,6 +106,9 @@
     </ClInclude>
     <ClInclude Include="..\..\Libs\Time\TimeLib.h">
       <Filter>Libraries\Time</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\UnitTests\Mocks\EEPROMWin.h">
+      <Filter>UnitTests\Mocks</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -42,3 +42,11 @@ TEST_F(TimeTest, Check_Internal_Timer_StartTimer)
 
 }
 
+TEST_F(TimeTest, Check_Internal_Timer_Status)
+{
+	setTime(22, 00, 00, 1, 1, 2017);
+	ASSERT_EQ(timeStatus_t::timeSet, timeStatus());
+	setSyncInterval(1);
+	Sleep(1200);
+	ASSERT_EQ(timeStatus_t::timeNeedsSync, timeStatus());
+}
