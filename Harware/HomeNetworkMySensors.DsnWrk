@@ -1,0 +1,6 @@
+[ProjectGroup]
+Version=1.0
+[Project1]
+ProjectPath=ESP8266-Gateway\ESP8266 - Gateway.PrjPCB
+[Project2]
+ProjectPath=PowerMeter - Sensor\PowerMeter - Sensor.PrjPcb

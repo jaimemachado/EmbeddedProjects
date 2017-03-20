@@ -11,9 +11,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{9899BECB-8782-41C0-9DC1-FF50738570D4}</ProjectGuid>
-    <RootNamespace>$safeprojectname$</RootNamespace>
-    <ProjectName>InteligentSwitch</ProjectName>
+    <ProjectGuid>{3E52298C-1C2D-4614-82B1-D9805D06F6BF}</ProjectGuid>
+    <RootNamespace>
+    </RootNamespace>
+    <ProjectName>EnergyMeterSensor</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -47,8 +48,8 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Users\Jaime\Documents\Arduino\libraries\MySensors;C:\Users\Jaime\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.17\libraries\SPI\src;C:\Users\Jaime\Documents\Arduino\libraries\Time;C:\Program Files (x86)\Arduino\libraries;C:\Users\Jaime\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.17\libraries;C:\Users\Jaime\Documents\Arduino\libraries;C:\Users\Jaime\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.17\cores\arduino;C:\Users\Jaime\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.17\variants\eightanaloginputs;$(ProjectDir)..\InteligentSwitch;C:\Users\Jaime\AppData\Local\arduino15\packages\arduino\tools\avr-gcc\4.9.2-atmel3.5.3-arduino2\avr\include\;C:\Users\Jaime\AppData\Local\arduino15\packages\arduino\tools\avr-gcc\4.9.2-atmel3.5.3-arduino2\avr\include\avr\;C:\Users\Jaime\AppData\Local\arduino15\packages\arduino\tools\avr-gcc\4.9.2-atmel3.5.3-arduino2\lib\gcc\avr\4.9.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <ForcedIncludeFiles>$(ProjectDir)__vm\.InteligentSwitch.vsarduino.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <AdditionalIncludeDirectories>C:\Users\Jaime\Documents\Arduino\libraries\EmonLib;C:\Program Files (x86)\Arduino\libraries;C:\Users\Jaime\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.17\libraries;C:\Users\Jaime\Documents\Arduino\libraries;C:\Users\Jaime\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.17\cores\arduino;C:\Users\Jaime\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.17\variants\eightanaloginputs;$(ProjectDir)..\EnergyMeterSensor;C:\Users\Jaime\AppData\Local\arduino15\packages\arduino\tools\avr-gcc\4.9.2-atmel3.5.3-arduino2\avr\include\;C:\Users\Jaime\AppData\Local\arduino15\packages\arduino\tools\avr-gcc\4.9.2-atmel3.5.3-arduino2\avr\include\avr\;C:\Users\Jaime\AppData\Local\arduino15\packages\arduino\tools\avr-gcc\4.9.2-atmel3.5.3-arduino2\lib\gcc\avr\4.9.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ForcedIncludeFiles>$(ProjectDir)__vm\.EnergyMeterSensor.vsarduino.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
       <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
       <PreprocessorDefinitions>__AVR_ATmega328p__;__AVR_ATmega328P__;_VMDEBUG=1;F_CPU=16000000L;ARDUINO=106013;ARDUINO_AVR_NANO;ARDUINO_ARCH_AVR;__cplusplus=201103L;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -63,8 +64,8 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Users\Jaime\Documents\Arduino\libraries\MySensors;C:\Users\Jaime\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.17\libraries\SPI\src;C:\Users\Jaime\Documents\Arduino\libraries\Time;C:\Program Files (x86)\Arduino\libraries;C:\Users\Jaime\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.17\libraries;C:\Users\Jaime\Documents\Arduino\libraries;C:\Users\Jaime\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.17\cores\arduino;C:\Users\Jaime\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.17\variants\eightanaloginputs;$(ProjectDir)..\InteligentSwitch;C:\Users\Jaime\AppData\Local\arduino15\packages\arduino\tools\avr-gcc\4.9.2-atmel3.5.3-arduino2\avr\include\;C:\Users\Jaime\AppData\Local\arduino15\packages\arduino\tools\avr-gcc\4.9.2-atmel3.5.3-arduino2\avr\include\avr\;C:\Users\Jaime\AppData\Local\arduino15\packages\arduino\tools\avr-gcc\4.9.2-atmel3.5.3-arduino2\lib\gcc\avr\4.9.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <ForcedIncludeFiles>$(ProjectDir)__vm\.InteligentSwitch.vsarduino.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <AdditionalIncludeDirectories>C:\Users\Jaime\Documents\Arduino\libraries\MySensors;C:\Users\Jaime\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.17\libraries\SPI\src;C:\Users\Jaime\Documents\Arduino\libraries\EmonLib;C:\Users\Jaime\Documents\Arduino\libraries\EEPROMEx;C:\Program Files (x86)\Arduino\libraries;C:\Users\Jaime\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.17\libraries;C:\Users\Jaime\Documents\Arduino\libraries;C:\Users\Jaime\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.17\cores\arduino;C:\Users\Jaime\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.17\variants\eightanaloginputs;$(ProjectDir)..\EnergyMeterSensor;C:\Users\Jaime\AppData\Local\arduino15\packages\arduino\tools\avr-gcc\4.9.2-atmel3.5.3-arduino2\avr\include\;C:\Users\Jaime\AppData\Local\arduino15\packages\arduino\tools\avr-gcc\4.9.2-atmel3.5.3-arduino2\avr\include\avr\;C:\Users\Jaime\AppData\Local\arduino15\packages\arduino\tools\avr-gcc\4.9.2-atmel3.5.3-arduino2\lib\gcc\avr\4.9.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ForcedIncludeFiles>$(ProjectDir)__vm\.EnergyMeterSensor.vsarduino.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <PreprocessorDefinitions>__AVR_ATmega328p__;__AVR_ATmega328P__;F_CPU=16000000L;ARDUINO=106013;ARDUINO_AVR_NANO;ARDUINO_ARCH_AVR;__cplusplus=201103L;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -78,17 +79,20 @@
     <ProjectCapability Include="VisualMicro" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="InteligentSwitch.ino">
+    <None Include="EnergyMeterSensor.ino">
       <FileType>CppCode</FileType>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="NodeConfig.h" />
-    <ClInclude Include="TimeScheduler.h" />
-    <ClInclude Include="__vm\.InteligentSwitch.vsarduino.h" />
+    <ClInclude Include="DataStoraManager.h" />
+    <ClInclude Include="SensorImpl.h" />
+    <ClInclude Include="TimeLib.h" />
+    <ClInclude Include="__vm\.EnergyMeterSensor.vsarduino.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="TimeScheduler.cpp" />
+    <ClCompile Include="DataStoraManager.cpp" />
+    <ClCompile Include="SensorImpl.cpp" />
+    <ClCompile Include="TimeLib.cpp" />
   </ItemGroup>
   <PropertyGroup>
     <DebuggerFlavor>VisualMicroDebugger</DebuggerFlavor>
@@ -98,7 +102,7 @@
   </ImportGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties arduino.upload.port="COM4" />
+      <UserProperties arduino.upload.port="COM5" />
     </VisualStudio>
   </ProjectExtensions>
 </Project>
