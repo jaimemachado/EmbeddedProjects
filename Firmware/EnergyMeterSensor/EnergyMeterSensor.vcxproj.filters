@@ -27,18 +27,12 @@
     <ClInclude Include="TimeLib.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SensorImpl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DataStoraManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TimeLib.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SensorImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

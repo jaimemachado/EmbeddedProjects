@@ -85,13 +85,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DataStoraManager.h" />
-    <ClInclude Include="SensorImpl.h" />
     <ClInclude Include="TimeLib.h" />
     <ClInclude Include="__vm\.EnergyMeterSensor.vsarduino.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DataStoraManager.cpp" />
-    <ClCompile Include="SensorImpl.cpp" />
     <ClCompile Include="TimeLib.cpp" />
   </ItemGroup>
   <PropertyGroup>
@@ -102,7 +100,7 @@
   </ImportGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties arduino.upload.port="COM5" />
+      <UserProperties arduino.upload.port="COM4" />
     </VisualStudio>
   </ProjectExtensions>
 </Project>

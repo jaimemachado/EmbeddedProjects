@@ -36,12 +36,11 @@
 
 
 // Enable debug prints
-
-#include "SensorImpl.h"
 #define NUMBER_OF_SENSORS 1
 #define NUMBER_READS_TO_UPDATE_KWH 10
 #define CURRENT_REF_VOLTAGE 230.0
 #define REFRESH_TIME 5
+#define POWER_METER_PRECISION 0.0001
 
 #define MY_DEBUG
 
@@ -73,14 +72,17 @@ enum SENSORSTATUS
 	READY = 4,
 };
 
+EnergyMonitor emon;
+bool allinited = false;
+DataStoraManager dataManage(NUMBER_OF_SENSORS);
+
 struct SensorsData
 {
 	double kwh;
+	double lastKWHSent;
 	
 	uint8_t id;
-	MyMessage watMsg;
-	MyMessage kwhMsg;
-	MyMessage storeMsg;
+	MyMessage mysensorMsg;
 	double calibrations;
 	uint8_t status;
 	uint8_t updatesStatus;
@@ -95,12 +97,6 @@ struct SensorsData
 	{
 		id = configID;
 		calibrations = 0.0;
-		watMsg.setSensor(GetSensorAddress());
-		watMsg.setType(V_WATT);
-		kwhMsg.setSensor(GetSensorAddress());
-		kwhMsg.setType(V_KWH);
-		storeMsg.setSensor(GetSensorAddressCalibration());
-		storeMsg.setType(KWH_STORE_TYPE);
 		status = SENSORSTATUS::NOT_PRESENTED;
 		lastUpdate = TimeLib::getCurrentTime();
 		lastWattRead = 0;
@@ -109,35 +105,176 @@ struct SensorsData
 		tempKWH = 0;
 	}
 
+
+	void presentSensor()
+	{
+		int tryies = 5;
+		while (status == NOT_PRESENTED && tryies != 0)
+		{
+			present(GetSensorAddress(), S_POWER, "Power Mesure", true);
+			wait(200);
+			tryies--;
+		}
+		tryies = 5;
+		while (status == CALIB_NOT_PRESENTED && tryies != 0)
+		{
+			present(GetSensorAddressStoreData(), CALIBRATION_TYPE, "DummyStoreCalibration", true);
+			wait(200);
+			tryies--;
+		}
+	}
+
+	void processMessage(const MyMessage &message)
+	{
+		if ((id == GET_SENSOR_ARRAY_ID(message.sensor)) ||
+			(id == GET_SENSOR_ARRAY_ID_STOREDATA(message.sensor)))
+		{
+			//Process S_POWER_PRESENTATION
+			if (message.type == S_POWER && message.getCommand() == C_PRESENTATION)
+			{
+				presented();
+				return;
+			}
+			//Process STOREDATA_SENSOR_PRESENTATION
+			if (message.type == CALIBRATION_TYPE && message.getCommand() == C_PRESENTATION)
+			{
+				presentedCalibri();
+				return;
+			}
+
+			//Restore Saved Calibration Value
+			if (message.type == CALIBRATION_STORE_TYPE)
+			{
+				uint8_t sensorID = GET_SENSOR_ARRAY_ID_STOREDATA(message.sensor);
+				long calib = message.getLong();
+				Serial.print("Received calibrations sensor ID:");
+				Serial.print(sensorID);
+				Serial.print(" Value:");
+				Serial.println(calib);
+				calibrationReceived(calib);
+				return;
+			}
+
+			//Restore Saved KWH Value
+			if (message.type == KWH_STORE_TYPE)
+			{
+				uint8_t sensorID = GET_SENSOR_ARRAY_ID_STOREDATA(message.sensor);
+				kwhReceived(message.getLong());
+				Serial.print("Received last kwh consumption sensor ID:");
+				Serial.print(sensorID);
+				Serial.print(" Value:");
+				Serial.println(kwh);
+				return;
+			}
+		}
+	}
+
+	void presented()
+	{
+		if (status == SENSORSTATUS::NOT_PRESENTED)
+		{
+			status = CALIB_NOT_PRESENTED;
+			Serial.print("Sensor: ");
+			Serial.print(id);
+			Serial.println(" - NOT_PRESENTED -> CALIB_NOT_PRESENTED");
+		}
+	}
+
+	void presentedCalibri()
+	{
+		if (status == SENSORSTATUS::CALIB_NOT_PRESENTED)
+		{
+			status = WaitingCALIBRATION;
+			Serial.print("Sensor: ");
+			Serial.print(id);
+			Serial.println(" - CALIB_NOT_PRESENTED -> WaitingCALIBRATION");
+		}
+	}
+
+	void calibrationReceived(unsigned long newCalibration)
+	{
+		double newCalibretionValue = (double)newCalibration / 100;
+		if (status == SENSORSTATUS::WaitingCALIBRATION)
+		{
+			calibrations = newCalibretionValue;
+			status = SENSORSTATUS::WaitingKWH;
+			Serial.print("Sensor:");
+			Serial.print(id);
+			Serial.print(" Calibra:");
+			Serial.print(newCalibretionValue);
+			Serial.println(" - WaitingCALIBRATION -> WaitingKWH");
+
+		}
+		else
+		{
+			if (calibrations != newCalibretionValue)
+			{
+				updateCalibrations(newCalibretionValue);
+			}
+		}
+	}
+
+	void updateCalibrations(double newCalibration)
+	{
+		calibrations = newCalibration;
+		Serial.print("Setting New Calibration Sensor:");
+		Serial.print(id);
+		Serial.print(" Value:");
+		Serial.println(calibrations);
+
+		mysensorMsg.setSensor(GetSensorAddressStoreData());
+		mysensorMsg.setType(CALIBRATION_STORE_TYPE);
+		send(mysensorMsg.set(calibrations * 100, 2));
+	}
+
+	void kwhReceived(unsigned long newKwh)
+	{
+		kwh = (double)newKwh / 100;
+		status = SENSORSTATUS::READY;
+		Serial.print("Sensor:");
+		Serial.print(id);
+		Serial.print(" NewValue:");
+		Serial.print(kwh);
+		Serial.println(" - WaitingKWH -> READY");
+		lastTimeRecalcKWH = TimeLib::getCurrentTime();
+	}
+
+
 	void addWattRead(double readWatt)
 	{
 		lastWattRead = readWatt;
 		accumulateKW += readWatt;
 		numberOfAdds++;
-		if(numberOfAdds == NUMBER_READS_TO_UPDATE_KWH)
+		if (numberOfAdds == NUMBER_READS_TO_UPDATE_KWH)
 		{
 			unsigned long milis = TimeLib::milliSecPassed(lastTimeRecalcKWH);
 
-			//tempKWH += ((accumulateKW / numberOfAdds)*milis);
-			tempKWH += 36000010;
+			tempKWH += ((accumulateKW / numberOfAdds)*milis);
 
+			accumulateKW = 0;
 			lastTimeRecalcKWH = TimeLib::getCurrentTime();
 			numberOfAdds = 0;
 			Serial.print("TempKWH Sensor:");
 			Serial.print(id);
+			Serial.print(" Millis:");
+			Serial.print(milis);
 			Serial.print(" Value:");
 			Serial.println(tempKWH);
 		}
-		if(tempKWH > 36000000)
+		if (tempKWH > (3600000000 * POWER_METER_PRECISION))
 		{
-			tempKWH -= 36000000;
-			kwh += 0.01;
+			while (tempKWH > (3600000000 * POWER_METER_PRECISION))
+			{
+				tempKWH -= (3600000000 * POWER_METER_PRECISION);
+				kwh += POWER_METER_PRECISION;
+			}
 			Serial.print("kwh incrised sensor:");
 			Serial.print(id);
 			Serial.print(" Value:");
 			Serial.println(kwh);
 		}
 	}
+
 
 	double getLastWatt()
 	{
@@ -149,94 +286,107 @@ struct SensorsData
 		return GET_SENSOR_ADDRESS(id);
 	}
 
-	uint8_t GetSensorAddressCalibration()
+	uint8_t GetSensorAddressStoreData()
 	{
 		return GET_SENSOR_ADDRESS_STOREDATA(id);
 	}
 
-	void presented()
+	void SendData()
 	{
-		if (status == SENSORSTATUS::NOT_PRESENTED)
+		if (TimeLib::secPassed(lastUpdate) >= REFRESH_TIME)
 		{
-			status = CALIB_NOT_PRESENTED;
-			Serial.print("Sensor:");
-			Serial.print(id);
-			Serial.println(" - NOT_PRESENTED -> CALIB_NOT_PRESENTED");
+			mysensorMsg.setSensor(GetSensorAddress());
+			mysensorMsg.setType(V_WATT);
+			send(mysensorMsg.set(getLastWatt(), 2));
+			wait(100);
+
+			lastUpdate = TimeLib::getCurrentTime();
 		}
+		if(kwh != lastKWHSent)
+		{
+			lastKWHSent = kwh;
+			mysensorMsg.setSensor(GetSensorAddress());
+			mysensorMsg.setType(V_KWH);
+			send(mysensorMsg.set(kwh, 2));
+			wait(100);
+
+			mysensorMsg.setSensor(GetSensorAddressStoreData());
+			mysensorMsg.setType(KWH_STORE_TYPE);
+			send(mysensorMsg.set(kwh * 100, 2));
+			wait(100);
+		}
+
+		wait(500);
 	}
 
-	void presentedCalibri()
+	void prepareEMON()
 	{
-		if (status == SENSORSTATUS::CALIB_NOT_PRESENTED)
-		{
-			status = WaitingCALIBRATION;
-			Serial.print("Sensor:");
-			Serial.print(id);
-			Serial.println(" - CALIB_NOT_PRESENTED -> WaitingCALIBRATION");
-		}
-	}
-
-	void kwhReceived(unsigned long newKwh)
-	{
-		kwh = newKwh;
-		status = SENSORSTATUS::READY;
-		Serial.print("Sensor:");
+		Serial.print("Prepare Sensor:");
 		Serial.print(id);
-		Serial.print(" NewValue:");
-		Serial.print(kwh);
-		Serial.println(" - WaitingKWH -> READY");
-		lastTimeRecalcKWH = TimeLib::getCurrentTime();
-	}
-	
-	void updateCalibrations(unsigned long newCalibration)
-	{
-		calibrations = ((double)(newCalibration)) / 100;
-		Serial.print("Setting New Calibration Sensor:");
-		Serial.print(id);
-		Serial.print(" Value:");
+		Serial.print(" Calibri:");
 		Serial.println(calibrations);
-		storeMsg.setType(CALIBRATION_STORE_TYPE);
-		send(storeMsg.set(calibrations*100, 2), true);
-		storeMsg.setType(KWH_STORE_TYPE);
+		emon.current(id, calibrations);
 	}
 
-	void calibrationReceived(unsigned long newCalibration)
+	void ReadData()
 	{
-		if (status == SENSORSTATUS::WaitingCALIBRATION)
-		{
-			calibrations = newCalibration/100;
-			status = SENSORSTATUS::WaitingKWH;
-			Serial.print("Sensor:");
-			Serial.print(id);
-			Serial.println(" - WaitingCALIBRATION -> WaitingKWH");
-			
-		}
-		else
-		{
-			if(calibrations != (newCalibration/100))
-			{
-				updateCalibrations(newCalibration);
-			}
-		}
+		prepareEMON();
+		float Irms = emon.calcIrms(1480);
+		float watt = Irms * CURRENT_REF_VOLTAGE;
+
+		Serial.print("Read Sensor: ");
+		Serial.print(id);
+		Serial.print(" Aparent Power: ");
+		Serial.print(watt);	       // Apparent power
+		Serial.print(" Current: ");
+		Serial.print(Irms);
+		Serial.print(" AnalogRead: ");
+		double val = analogRead(id);
+		Serial.println(val);
+		addWattRead(watt);
+		wait(300);
 	}
+
+	void run()
+	{
+			switch (status)
+			{
+			case SENSORSTATUS::WaitingKWH:
+				if (TimeLib::secPassed(lastUpdate) > 20)
+				{
+					request(GetSensorAddressStoreData(), KWH_STORE_TYPE);
+					lastUpdate = TimeLib::getCurrentTime();
+					wait(200);
+				}
+				break;
+
+			case SENSORSTATUS::WaitingCALIBRATION:
+				if (TimeLib::secPassed(lastUpdate) > 5)
+				{
+					request(GetSensorAddressStoreData(), CALIBRATION_STORE_TYPE);
+					lastUpdate = TimeLib::getCurrentTime();
+				}
+				break;
+			case SENSORSTATUS::READY:
+				ReadData();
+				SendData();
+			default:
+				break;
+			}
+			wait(100);
+	}
+
 };
 
 SensorsData sensors[NUMBER_OF_SENSORS];
-EnergyMonitor emon;
-bool allinited = false;
 
 
-void prepareEMON(uint8_t id)
-{
-	Serial.print("Prepare Sensor:");
-	Serial.print(id);
-	Serial.print(" Calibri:");
-	Serial.println(sensors[id].calibrations);
-	emon.current(id, sensors[id].calibrations);
-}
+
+
 
 void setup()
 {
+
 }
 
 void receive(const MyMessage &message)
@@ -245,56 +395,16 @@ void receive(const MyMessage &message)
 	Serial.print(message.sensor);
 	Serial.print(" Command:");
 	Serial.print(message.getCommand());
+	Serial.print(" IsAck:");
+	Serial.print(message.isAck());
 	Serial.print(" Type:");
 	Serial.println(message.type);
 
-	if(message.type == S_POWER && message.getCommand() == C_PRESENTATION)
+	for (int x = 0; x < NUMBER_OF_SENSORS; x++)
 	{
-		uint8_t sensorID = GET_SENSOR_ARRAY_ID(message.sensor);
-		sensors[sensorID].presented();
-		return;
-	}
-	if (message.type == CALIBRATION_TYPE && message.getCommand() == C_PRESENTATION)
-	{
-		Serial.print("Presented CalibreSensor:");
-		Serial.println(GET_SENSOR_ARRAY_ID_STOREDATA(message.sensor));
-		uint8_t sensorID = GET_SENSOR_ARRAY_ID_STOREDATA(message.sensor);
-		sensors[sensorID].presentedCalibri();
-		return;
+		sensors[x].processMessage(message);
 	}
 
-	//Saved KWHData
-	if (message.type == KWH_STORE_TYPE)
-	{
-		if (message.sensor >= 120 && (message.sensor < (120 + NUMBER_OF_SENSORS)))
-		{
-			uint8_t sensorID = GET_SENSOR_ARRAY_ID_STOREDATA(message.sensor);
-			sensors[sensorID].kwhReceived(message.getLong());
-			Serial.print("Received last kwh consumption sensor ID:");
-			Serial.print(sensorID);
-			Serial.print(" Value:");
-			Serial.println(sensors[sensorID].kwh);
-			return;
-		}
-	}
-	//Calibration
-	if (message.type == CALIBRATION_STORE_TYPE)
-	{
-		if (message.sensor >= 120 && (message.sensor < (120 + NUMBER_OF_SENSORS)))
-		{
-			uint8_t sensorID = GET_SENSOR_ARRAY_ID_STOREDATA(message.sensor);
-			long calib = message.getLong();
-			Serial.print("Received calibrations sensor ID:");
-			Serial.print(sensorID);
-			Serial.print(" Value:");
-			Serial.println(calib);
-			
-			sensors[sensorID].calibrationReceived(calib);
-
-			return;
-		}
-		
-	}
 }
 
 void presentation()
@@ -307,117 +417,19 @@ void presentation()
 
 	for (int x = 0; x < NUMBER_OF_SENSORS; x++)
 	{
-		int tryies = 5;
-		while (sensors[x].status == NOT_PRESENTED && tryies !=0)
-		{
-			present(sensors[x].GetSensorAddress(), S_POWER, "Power Mesure", true);
-			wait(200);
-			tryies--;
-		}
-		tryies = 5;
-		while (sensors[x].status == CALIB_NOT_PRESENTED && tryies != 0)
-		{
-			present(sensors[x].GetSensorAddressCalibration(), CALIBRATION_TYPE, "DummyStoreCalibration", true);
-			wait(200);
-			tryies--;
-		}
+		sensors[x].presentSensor();
 	}
 	
 }
 
-bool initialization()
-{
-	uint8_t allOK = NUMBER_OF_SENSORS;
-	for( int sensorID = 0; sensorID < NUMBER_OF_SENSORS; sensorID++)
-	{
-		SensorsData* sensor = &(sensors[sensorID]);
-		switch (sensors[sensorID].status)
-		{
-		case SENSORSTATUS::WaitingKWH:
-			if (TimeLib::secPassed(sensor->lastUpdate) > 5)
-			{
-				request(sensor->GetSensorAddressCalibration(), KWH_STORE_TYPE);
-				sensor->lastUpdate = TimeLib::getCurrentTime();
-				wait(200);
-			}
-			break;
 
-		case SENSORSTATUS::WaitingCALIBRATION:
-			if (TimeLib::secPassed(sensor->lastUpdate) > 5)
-			{
-				request(sensor->GetSensorAddressCalibration(), CALIBRATION_STORE_TYPE);
-				sensor->lastUpdate = TimeLib::getCurrentTime();
-			}
-			break;
-		case SENSORSTATUS::READY:
-			allOK--;
-			continue;
-		default:
-			break;
-		}
-		wait(100);
-	}
-	return allOK == 0;
-}
 
-void ReadData()
-{
-	for (int sensorID = 0; sensorID < NUMBER_OF_SENSORS; sensorID++)
-	{
-		SensorsData* sensor = &(sensors[sensorID]);
-		if (sensors[sensorID].status == SENSORSTATUS::READY)
-		{
-			prepareEMON(sensor->id);
-			float Irms = emon.calcIrms(1480);
-			float watt = Irms * CURRENT_REF_VOLTAGE;
-
-			Serial.print("Read Sensor: ");
-			Serial.print(sensorID);
-			Serial.print("Aparent Power: ");
-			Serial.print(watt);	       // Apparent power
-			Serial.print(" Current: ");
-			Serial.print(Irms);
-			Serial.print(" AnalogRead: ");
-			double val = analogRead(sensorID);
-			Serial.println(val);
-			sensor->addWattRead(watt);
-		}
-		wait(300);
-	}
-}
-
-void SendData()
-{
-	for (int sensorID = 0; sensorID < NUMBER_OF_SENSORS; sensorID++)
-	{
-		if (sensors[sensorID].status == SENSORSTATUS::READY)
-		{
-			SensorsData* sensor = &(sensors[sensorID]);
-			if (TimeLib::secPassed(sensor->lastUpdate) >= REFRESH_TIME)
-			{
-				send(sensor->watMsg.set(sensor->getLastWatt(), 2));
-				wait(100);
-
-				send(sensor->kwhMsg.set(sensor->kwh/100, 2));
-				wait(100);
-				send(sensor->storeMsg.set(sensor->kwh, 2));
-				wait(100);
-				sensor->lastUpdate = TimeLib::getCurrentTime();
-			}
-			wait(500);
-		}
-	}
-}
 
 void loop()
 {
-	if(!allinited)
+	for (int x = 0; x < NUMBER_OF_SENSORS; x++)
 	{
-		allinited = initialization();
+		sensors[x].run();
 	}
-	ReadData();
-	SendData();
-	
-	wait(10000);
 }
 
