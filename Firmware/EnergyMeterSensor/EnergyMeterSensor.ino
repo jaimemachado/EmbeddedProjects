@@ -34,9 +34,11 @@
  * http://www.mysensors.org/build/pulse_power
  */
 
+#define JMN_DEBUG_INFO
+//#define JMN_DEBUG_VERBOSE
 
 // Enable debug prints
-#define NUMBER_OF_SENSORS 1
+#define NUMBER_OF_SENSORS 2
 #define NUMBER_READS_TO_UPDATE_KWH 10
 #define CURRENT_REF_VOLTAGE 230.0
 #define REFRESH_TIME 5
@@ -61,20 +63,67 @@
 #include "TimeLibJMN.h"
 #include <TimeLib.h>
 
-#define CHILD_ID_S0 999              // Entrada de energia na casa max 90A
-#define GET_SENSOR_ADDRESS(X) CHILD_ID_S0 + X
-#define GET_SENSOR_ADDRESS_STOREDATA(X) (CHILD_ID_S0 + X + 20)
-#define GET_SENSOR_ARRAY_ID(X) X - CHILD_ID_S0 
-#define GET_SENSOR_ARRAY_ID_STOREDATA(X) (X - CHILD_ID_S0 - 20)
+#define CHILD_ID_S0 100            // Entrada de energia na casa max 90A
+#define GET_SENSOR_ADDRESS(X) CHILD_ID_S0 + X*10
+#define GET_SENSOR_ADDRESS_STOREDATA(X) (GET_SENSOR_ADDRESS(X) + 1)
+#define GET_SENSOR_ADDRESS_DAY(X) (GET_SENSOR_ADDRESS(X) + 2)
+#define GET_SENSOR_ADDRESS_STOREDATA_DAY(X) (GET_SENSOR_ADDRESS(X) + 3)
+#define GET_SENSOR_ADDRESS_NIGHT(X) (GET_SENSOR_ADDRESS(X) + 4)
+#define GET_SENSOR_ADDRESS_STOREDATA_NIGHT(X) (GET_SENSOR_ADDRESS(X) + 5)
+
+#define GET_SENSOR_ARRAY_ID(X) (X - CHILD_ID_S0) % 10
+#define GET_SENSOR_ARRAY_ID_STOREDATA(X) (GET_SENSOR_ARRAY_ID(X) - 1)
+#define GET_SENSOR_ARRAY_ID_DAY(X) (GET_SENSOR_ARRAY_ID(X) - 2)
+#define GET_SENSOR_ARRAY_ID_STOREDATA_DAY(X) (GET_SENSOR_ARRAY_ID(X) - 3)
+#define GET_SENSOR_ARRAY_ID_NIGHT(X) (GET_SENSOR_ARRAY_ID(X) - 4)
+#define GET_SENSOR_ARRAY_ID_STOREDATA_NIGHT(X) (GET_SENSOR_ARRAY_ID(X) - 5)
  
 enum SENSORSTATUS
 {
 	NOT_PRESENTED = 0,
 	CALIB_NOT_PRESENTED = 1,
+	DAY_SENSOR_NOT_PRESENTED = 3,
+	NIGHT_SENSOR_NOT_PRESENTED = 6,
 	WaitingCALIBRATION = 2,
-	WaitingKWH = 3,
-	READY = 4,
+	WaitingKWH_DAY = 5,
+	WaitingKWH_NIGHT = 8,
+	WaitingKWH = 9,
+	READY = 10,
 };
+
+const char *POWER_0 = "PTotal0";
+const char *POWER_1 = "PTotal1";
+const char *POWER_2 = "PTotal2";
+const char *POWER_3 = "PTotal3";
+const char *POWER_4 = "PTotal4";
+const char *POWER_5 = "PTotal5";
+const char *POWER_6 = "PTotal6";
+const char *POWER_7 = "PTotal7";
+const char *CALIBRI_0 = "Calib0";
+const char *CALIBRI_1 = "Calib1";
+const char *CALIBRI_2 = "Calib2";
+const char *CALIBRI_3 = "Calib3";
+const char *CALIBRI_4 = "Calib4";
+const char *CALIBRI_5 = "Calib5";
+const char *CALIBRI_6 = "Calib6";
+const char *CALIBRI_7 = "Calib7";
+const char *POWERD_0 = "PTotalD0";
+const char *POWERD_1 = "PTotalD1";
+const char *POWERD_2 = "PTotalD2";
+const char *POWERD_3 = "PTotalD3";
+const char *POWERD_4 = "PTotalD4";
+const char *POWERD_5 = "PTotalD5";
+const char *POWERD_6 = "PTotalD6";
+const char *POWERD_7 = "PTotalD7";
+const char *POWERN_0 = "PTotalN0";
+const char *POWERN_1 = "PTotalN1";
+const char *POWERN_2 = "PTotalN2";
+const char *POWERN_3 = "PTotalN3";
+const char *POWERN_4 = "PTotalN4";
+const char *POWERN_5 = "PTotalN5";
+const char *POWERN_6 = "PTotalN6";
+const char *POWERN_7 = "PTotalN7";
+
 
 EnergyMonitor emon;
 bool allinited = false;
@@ -93,13 +142,19 @@ int32_t testTime = 0;
 struct SensorsData
 {
 	double kwh;
+	double kwhDay;
+	double kwhNight;
 	double lastKWHSent;
 	
-	uint8_t id; 
+	uint8_t sensorPort;
+	
+	//Total
+	uint8_t id_total;
+
+	//General
 	MyMessage mysensorMsg;
 	double calibrations;
 	uint8_t status;
-	uint8_t updatesStatus;
 	unsigned long lastUpdate;
 	double lastWattRead;
 	double accumulateKW;
@@ -109,7 +164,7 @@ struct SensorsData
 
 	void init(uint8_t configID)
 	{
-		id = configID;
+		id_total = configID;
 		calibrations = 0.0;
 		status = SENSORSTATUS::NOT_PRESENTED;
 		lastUpdate = TimeLibJMN::getCurrentTime();
@@ -122,26 +177,132 @@ struct SensorsData
 
 	void presentSensor()
 	{
-		int tryies = 5;
-		while (status == NOT_PRESENTED && tryies != 0)
+		while (status == NOT_PRESENTED )
 		{
-			present(GetSensorAddress(), S_POWER, "Power Mesure", true);
-			wait(200);
-			tryies--;
+#ifdef JMN_DEBUG_VERBOSE
+			Serial.print("Presenting Power Mesure sensor TOTAL:");
+			Serial.println(id_total);
+#endif
+			if (id_total == 0) present(GetSensorAddress(), S_POWER, POWER_0, true);
+#if NUMBER_OF_SENSORS > 1
+			if (id_total == 1) present(GetSensorAddress(), S_POWER, POWER_1, true); 
+#endif
+#if NUMBER_OF_SENSORS > 2
+			if (id_total == 2) present(GetSensorAddress(), S_POWER, POWER_2, true);
+#endif
+#if NUMBER_OF_SENSORS > 3
+			if (id_total == 3) present(GetSensorAddress(), S_POWER, POWER_3, true);
+#endif
+#if NUMBER_OF_SENSORS > 4
+			if (id_total == 4) present(GetSensorAddress(), S_POWER, POWER_4, true);
+#endif
+#if NUMBER_OF_SENSORS > 5
+			if (id_total == 5) present(GetSensorAddress(), S_POWER, POWER_5, true);
+#endif
+#if NUMBER_OF_SENSORS > 6
+			if (id_total == 6) present(GetSensorAddress(), S_POWER, POWER_6, true);
+#endif
+#if NUMBER_OF_SENSORS > 7
+			if (id_total == 7) present(GetSensorAddress(), S_POWER, POWER_7, true);
+#endif
+			wait(1000);
 		}
-		tryies = 5;
-		while (status == CALIB_NOT_PRESENTED && tryies != 0)
+		while (status == CALIB_NOT_PRESENTED)
 		{
-			present(GetSensorAddressStoreData(), CALIBRATION_TYPE, "DummyStoreCalibration", true);
-			wait(200);
-			tryies--;
+#ifdef JMN_DEBUG_VERBOSE
+			Serial.print("Presenting Calibration sensor:");
+			Serial.println(id_total);
+#endif
+			if (id_total == 0) present(GetSensorAddressStoreData(), CALIBRATION_TYPE, CALIBRI_0, true);
+#if NUMBER_OF_SENSORS > 1
+			if (id_total == 1) present(GetSensorAddressStoreData(), CALIBRATION_TYPE, CALIBRI_1, true);
+#endif
+#if NUMBER_OF_SENSORS > 2
+			if (id_total == 2) present(GetSensorAddressStoreData(), CALIBRATION_TYPE, CALIBRI_2, true);
+#endif
+#if NUMBER_OF_SENSORS > 3
+			if (id_total == 3) present(GetSensorAddressStoreData(), CALIBRATION_TYPE, CALIBRI_3, true);
+#endif
+#if NUMBER_OF_SENSORS > 4
+			if (id_total == 4) present(GetSensorAddressStoreData(), CALIBRATION_TYPE, CALIBRI_4, true);
+#endif
+#if NUMBER_OF_SENSORS > 5
+			if (id_total == 5) present(GetSensorAddressStoreData(), CALIBRATION_TYPE, CALIBRI_5, true);
+#endif
+#if NUMBER_OF_SENSORS > 6
+			if (id_total == 6) present(GetSensorAddressStoreData(), CALIBRATION_TYPE, CALIBRI_6, true);
+#endif
+#if NUMBER_OF_SENSORS > 7
+			if (id_total == 7) present(GetSensorAddressStoreData(), CALIBRATION_TYPE, CALIBRI_7, true);
+#endif
+			wait(1000);
+		}
+		while (status == DAY_SENSOR_NOT_PRESENTED)
+		{
+#ifdef JMN_DEBUG_VERBOSE
+			Serial.print("Presenting Power Mesure sensor Day:");
+			Serial.println(id_total);
+#endif
+			if (id_total == 0) present(GetSensorAddressDay(), S_POWER, POWERD_0, true);
+#if NUMBER_OF_SENSORS > 1
+			if (id_total == 1) present(GetSensorAddressDay(), S_POWER, POWERD_1, true);
+#endif
+#if NUMBER_OF_SENSORS > 2
+			if (id_total == 2) present(GetSensorAddressDay(), S_POWER, POWERD_2, true);
+#endif
+#if NUMBER_OF_SENSORS > 3
+			if (id_total == 3) present(GetSensorAddressDay(), S_POWER, POWERD_3, true);
+#endif
+#if NUMBER_OF_SENSORS > 4
+			if (id_total == 4) present(GetSensorAddressDay(), S_POWER, POWERD_4, true);
+#endif
+#if NUMBER_OF_SENSORS > 5
+			if (id_total == 5) present(GetSensorAddressDay(), S_POWER, POWERD_5, true);
+#endif
+#if NUMBER_OF_SENSORS > 6
+			if (id_total == 6) present(GetSensorAddressDay(), S_POWER, POWERD_6, true);
+#endif
+#if NUMBER_OF_SENSORS > 7
+			if (id_total == 7) present(GetSensorAddressDay(), S_POWER, POWERD_7, true);
+#endif
+			wait(1000);
+		}
+		while (status == NIGHT_SENSOR_NOT_PRESENTED)
+		{
+#ifdef JMN_DEBUG_VERBOSE
+			Serial.print("Presenting Power Mesure sensor Night:");
+			Serial.println(id_total);
+#endif
+			if (id_total == 0) present(GetSensorAddressNight(), S_POWER, POWERN_0, true);
+#if NUMBER_OF_SENSORS > 1
+			if (id_total == 1) present(GetSensorAddressNight(), S_POWER, POWERN_1, true);
+#endif
+#if NUMBER_OF_SENSORS > 2
+			if (id_total == 2) present(GetSensorAddressNight(), S_POWER, POWERN_2, true);
+#endif
+#if NUMBER_OF_SENSORS > 3
+			if (id_total == 3) present(GetSensorAddressNight(), S_POWER, POWERN_3, true);
+#endif
+#if NUMBER_OF_SENSORS > 4
+			if (id_total == 4) present(GetSensorAddressNight(), S_POWER, POWERN_4, true);
+#endif
+#if NUMBER_OF_SENSORS > 5
+			if (id_total == 5) present(GetSensorAddressNight(), S_POWER, POWERN_5, true);
+#endif
+#if NUMBER_OF_SENSORS > 6
+			if (id_total == 6) present(GetSensorAddressNight(), S_POWER, POWERN_6, true);
+#endif
+#if NUMBER_OF_SENSORS > 7
+			if (id_total == 7) present(GetSensorAddressNight(), S_POWER, POWERN_7, true);
+#endif
+			wait(1000);
 		}
 	}
 
 	void processMessage(const MyMessage &message)
 	{
-		if ((id == GET_SENSOR_ARRAY_ID(message.sensor)) ||
-			(id == GET_SENSOR_ARRAY_ID_STOREDATA(message.sensor)))
+		if ((GetSensorAddress() ==  message.sensor) ||
+			(GetSensorAddressStoreData() == message.sensor))
 		{
 			//Process S_POWER_PRESENTATION
 			if (message.type == S_POWER && message.getCommand() == C_PRESENTATION)
@@ -161,10 +322,12 @@ struct SensorsData
 			{
 				uint8_t sensorID = GET_SENSOR_ARRAY_ID_STOREDATA(message.sensor);
 				long calib = message.getLong();
+#ifdef JMN_DEBUG_VERBOSE
 				Serial.print("Received calibrations sensor ID:");
 				Serial.print(sensorID);
 				Serial.print(" Value:");
 				Serial.println(calib);
+#endif
 				calibrationReceived(calib);
 				return;
 			}
@@ -174,10 +337,66 @@ struct SensorsData
 			{
 				uint8_t sensorID = GET_SENSOR_ARRAY_ID_STOREDATA(message.sensor);
 				kwhReceived(message.getLong());
+#ifdef JMN_DEBUG_VERBOSE
 				Serial.print("Received last kwh consumption sensor ID:");
 				Serial.print(sensorID);
 				Serial.print(" Value:");
 				Serial.println(kwh);
+#endif
+				return;
+			}
+		}
+		//DAY
+		Serial.print("Sensor Day Addr:");
+		Serial.println(GetSensorAddressDay());
+		if ((GetSensorAddressDay() == message.sensor) ||
+			(GetSensorAddressStoreDataDay() == message.sensor))
+		{
+			Serial.println("Entered Day MSG Process!!!");
+			//Process S_POWER_PRESENTATION
+			if (message.type == S_POWER && message.getCommand() == C_PRESENTATION)
+			{
+				presentedDay();
+				return;
+			}
+
+			//Restore Saved KWH Value
+			if (message.type == KWH_STORE_TYPE)
+			{
+				uint8_t sensorID = GET_SENSOR_ARRAY_ID_STOREDATA_DAY(message.sensor);
+				kwhReceived_DAY(message.getLong());
+#ifdef JMN_DEBUG_VERBOSE
+				Serial.print("Received last kwh consumption DAY sensor ID:");
+				Serial.print(sensorID);
+				Serial.print(" Value:");
+				Serial.println(kwh);
+#endif
+				return;
+			}
+		}
+		//NIGHT
+		if ((GetSensorAddressNight() == message.sensor) ||
+			(GetSensorAddressStoreDataNight() == message.sensor))
+		{
+			Serial.println("Entered Night MSG Process!!");
+			//Process S_POWER_PRESENTATION
+			if (message.type == S_POWER && message.getCommand() == C_PRESENTATION)
+			{
+				presentedNight();
+				return;
+			}
+
+			//Restore Saved KWH Value
+			if (message.type == KWH_STORE_TYPE)
+			{
+				uint8_t sensorID = GET_SENSOR_ARRAY_ID_STOREDATA_NIGHT(message.sensor);
+				kwhReceived_NIGHT(message.getLong());
+#ifdef JMN_DEBUG_VERBOSE
+				Serial.print("Received last kwh consumption NIGHT sensor ID:");
+				Serial.print(sensorID);
+				Serial.print(" Value:");
+				Serial.println(kwh);
+#endif
 				return;
 			}
 		}
@@ -188,9 +407,37 @@ struct SensorsData
 		if (status == SENSORSTATUS::NOT_PRESENTED)
 		{
 			status = CALIB_NOT_PRESENTED;
+#ifdef JMN_DEBUG_INFO
 			Serial.print("Sensor: ");
-			Serial.print(id);
+			Serial.print(id_total);
 			Serial.println(" - NOT_PRESENTED -> CALIB_NOT_PRESENTED");
+#endif
+		}
+	}
+
+	void presentedDay()
+	{
+		if (status == SENSORSTATUS::DAY_SENSOR_NOT_PRESENTED)
+		{
+			status = SENSORSTATUS::NIGHT_SENSOR_NOT_PRESENTED;
+#ifdef JMN_DEBUG_INFO
+			Serial.print("Day Sensor: ");
+			Serial.print(id_total);
+			Serial.println(" - DAY_SENSOR_NOT_PRESENTED -> NIGHT_SENSOR_NOT_PRESENTED");
+#endif
+		}
+	}
+
+	void presentedNight()
+	{
+		if (status == SENSORSTATUS::NIGHT_SENSOR_NOT_PRESENTED)
+		{
+			status = SENSORSTATUS::WaitingCALIBRATION;
+#ifdef JMN_DEBUG_INFO
+			Serial.print("Night Sensor: ");
+			Serial.print(id_total);
+			Serial.println(" - NIGHT_SENSOR_NOT_PRESENTED -> WaitingCALIBRATION");
+#endif
 		}
 	}
 
@@ -198,10 +445,12 @@ struct SensorsData
 	{
 		if (status == SENSORSTATUS::CALIB_NOT_PRESENTED)
 		{
-			status = WaitingCALIBRATION;
+			status = DAY_SENSOR_NOT_PRESENTED;
+#ifdef JMN_DEBUG_INFO
 			Serial.print("Sensor: ");
-			Serial.print(id);
-			Serial.println(" - CALIB_NOT_PRESENTED -> WaitingCALIBRATION");
+			Serial.print(id_total);
+			Serial.println(" - CALIB_NOT_PRESENTED -> DAY_SENSOR_NOT_PRESENTED");
+#endif
 		}
 	}
 
@@ -211,13 +460,14 @@ struct SensorsData
 		if (status == SENSORSTATUS::WaitingCALIBRATION)
 		{
 			calibrations = newCalibretionValue;
-			status = SENSORSTATUS::WaitingKWH;
+			status = SENSORSTATUS::WaitingKWH_DAY;
+#ifdef JMN_DEBUG_INFO
 			Serial.print("Sensor:");
-			Serial.print(id);
+			Serial.print(id_total);
 			Serial.print(" Calibra:");
 			Serial.print(newCalibretionValue);
-			Serial.println(" - WaitingCALIBRATION -> WaitingKWH");
-
+			Serial.println(" - WaitingCALIBRATION -> WaitingKWH_DAY");
+#endif
 		}
 		else
 		{
@@ -231,11 +481,12 @@ struct SensorsData
 	void updateCalibrations(double newCalibration)
 	{
 		calibrations = newCalibration;
+#ifdef JMN_DEBUG_VERBOSE
 		Serial.print("Setting New Calibration Sensor:");
-		Serial.print(id);
+		Serial.print(id_total);
 		Serial.print(" Value:");
 		Serial.println(calibrations);
-
+#endif
 		mysensorMsg.setSensor(GetSensorAddressStoreData());
 		mysensorMsg.setType(CALIBRATION_STORE_TYPE);
 		send(mysensorMsg.set(calibrations * 100, 2));
@@ -245,14 +496,43 @@ struct SensorsData
 	{
 		kwh = (double)newKwh / 100;
 		status = SENSORSTATUS::READY;
+#ifdef JMN_DEBUG_INFO
 		Serial.print("Sensor:");
-		Serial.print(id);
+		Serial.print(id_total);
 		Serial.print(" NewValue:");
 		Serial.print(kwh);
 		Serial.println(" - WaitingKWH -> READY");
+#endif
 		lastTimeRecalcKWH = TimeLibJMN::getCurrentTime();
 	}
 
+	void kwhReceived_DAY(unsigned long newKwh)
+	{
+		kwhDay = (double)newKwh / 100;
+		status = SENSORSTATUS::WaitingKWH_NIGHT;
+#ifdef JMN_DEBUG_INFO
+		Serial.print("Sensor DAY:");
+		Serial.print(id_total);
+		Serial.print(" NewValue:");
+		Serial.print(kwh);
+		Serial.println(" - WaitingKWH_DAY -> WaitingKWH_NIGHT");
+#endif
+		lastTimeRecalcKWH = TimeLibJMN::getCurrentTime();
+	}
+
+	void kwhReceived_NIGHT(unsigned long newKwh)
+	{
+		kwhNight = (double)newKwh / 100;
+		status = SENSORSTATUS::WaitingKWH;
+#ifdef JMN_DEBUG_INFO
+		Serial.print("Sensor NIGHT:");
+		Serial.print(id_total);
+		Serial.print(" NewValue:");
+		Serial.print(kwh);
+		Serial.println(" - WaitingKWH_Night -> WaitingKWH");
+#endif
+		lastTimeRecalcKWH = TimeLibJMN::getCurrentTime();
+	}
 
 	void addWattRead(double readWatt)
 	{
@@ -268,12 +548,14 @@ struct SensorsData
 			accumulateKW = 0;
 			lastTimeRecalcKWH = TimeLibJMN::getCurrentTime();
 			numberOfAdds = 0;
+#ifdef JMN_DEBUG_VERBOSE
 			Serial.print("TempKWH Sensor:");
-			Serial.print(id);
+			Serial.print(id_total);
 			Serial.print(" Millis:");
 			Serial.print(milis);
 			Serial.print(" Value:");
 			Serial.println(tempKWH);
+#endif
 		}
 		if (tempKWH > (3600000000 * POWER_METER_PRECISION))
 		{
@@ -282,10 +564,12 @@ struct SensorsData
 				tempKWH -= (3600000000 * POWER_METER_PRECISION);
 				kwh += POWER_METER_PRECISION;
 			}
+#ifdef JMN_DEBUG_VERBOSE
 			Serial.print("kwh incrised sensor:");
-			Serial.print(id);
+			Serial.print(id_total);
 			Serial.print(" Value:");
 			Serial.println(kwh);
+#endif
 		}
 	}
 
@@ -297,12 +581,32 @@ struct SensorsData
 
 	uint8_t GetSensorAddress()
 	{
-		return GET_SENSOR_ADDRESS(id);
+		return GET_SENSOR_ADDRESS(id_total);
 	}
 
 	uint8_t GetSensorAddressStoreData()
 	{
-		return GET_SENSOR_ADDRESS_STOREDATA(id);
+		return GET_SENSOR_ADDRESS_STOREDATA(id_total);
+	}
+
+	uint8_t GetSensorAddressDay()
+	{
+		return GET_SENSOR_ADDRESS_DAY(id_total);
+	}
+
+	uint8_t GetSensorAddressStoreDataDay()
+	{
+		return GET_SENSOR_ADDRESS_STOREDATA_DAY(id_total);
+	}
+
+	uint8_t GetSensorAddressNight()
+	{
+		return GET_SENSOR_ADDRESS_NIGHT(id_total);
+	}
+
+	uint8_t GetSensorAddressStoreDataNight()
+	{
+		return GET_SENSOR_ADDRESS_STOREDATA_NIGHT(id_total);
 	}
 
 	void SendData()
@@ -335,11 +639,13 @@ struct SensorsData
 
 	void prepareEMON()
 	{
+#ifdef JMN_DEBUG_VERBOSE
 		Serial.print("Prepare Sensor:");
-		Serial.print(id);
+		Serial.print(id_total);
 		Serial.print(" Calibri:");
 		Serial.println(calibrations);
-		emon.current(id, calibrations);
+#endif
+		emon.current(id_total, calibrations);
 	}
 
 	void ReadData()
@@ -347,16 +653,17 @@ struct SensorsData
 		prepareEMON();
 		float Irms = emon.calcIrms(1480);
 		float watt = Irms * CURRENT_REF_VOLTAGE;
-
+#ifdef JMN_DEBUG_INFO
 		Serial.print("Read Sensor: ");
-		Serial.print(id);
+		Serial.print(id_total);
 		Serial.print(" Aparent Power: ");
 		Serial.print(watt);	       // Apparent power
 		Serial.print(" Current: ");
 		Serial.print(Irms);
 		Serial.print(" AnalogRead: ");
-		double val = analogRead(id);
+		double val = analogRead(id_total);
 		Serial.println(val);
+#endif
 		addWattRead(watt);
 		wait(300);
 	}
@@ -365,8 +672,26 @@ struct SensorsData
 	{
 			switch (status)
 			{
+			case SENSORSTATUS::WaitingKWH_DAY:
+				if (TimeLibJMN::secPassed(lastUpdate) > 5)
+				{
+					request(GetSensorAddressStoreDataDay(), KWH_STORE_TYPE);
+					lastUpdate = TimeLibJMN::getCurrentTime();
+					wait(200);
+				}
+				break;
+			
+			case SENSORSTATUS::WaitingKWH_NIGHT:
+				if (TimeLibJMN::secPassed(lastUpdate) > 5)
+				{
+					request(GetSensorAddressStoreDataNight(), KWH_STORE_TYPE);
+					lastUpdate = TimeLibJMN::getCurrentTime();
+					wait(200);
+				}
+				break;
+
 			case SENSORSTATUS::WaitingKWH:
-				if (TimeLibJMN::secPassed(lastUpdate) > 20)
+				if (TimeLibJMN::secPassed(lastUpdate) > 5)
 				{
 					request(GetSensorAddressStoreData(), KWH_STORE_TYPE);
 					lastUpdate = TimeLibJMN::getCurrentTime();
@@ -398,7 +723,9 @@ SensorsData sensors[NUMBER_OF_SENSORS];
 void updateTime()
 {
 	//Requesting Time
+#ifdef JMN_DEBUG_VERBOSE
 	Serial.println("Time requested!");
+#endif
 	requestTime();
 }
 
@@ -410,7 +737,9 @@ void setup()
 
 void receiveTime(unsigned long ts)
 {
+#ifdef JMN_DEBUG_VERBOSE
 	Serial.println("Time Received!");
+#endif
 	setTime(ts);
 	timeInited = true;
 	lastTimeUpdate = now();
@@ -418,6 +747,7 @@ void receiveTime(unsigned long ts)
 
 void receive(const MyMessage &message)
 {
+#ifdef JMN_DEBUG_INFO
 	Serial.print("Received message Sensor:");
 	Serial.print(message.sensor);
 	Serial.print(" Command:");
@@ -426,7 +756,7 @@ void receive(const MyMessage &message)
 	Serial.print(message.isAck());
 	Serial.print(" Type:");
 	Serial.println(message.type);
-
+#endif
 	for (int x = 0; x < NUMBER_OF_SENSORS; x++)
 	{
 		sensors[x].processMessage(message);
@@ -436,7 +766,6 @@ void receive(const MyMessage &message)
 
 void presentation()
 {
-#if 0
 	for(int x = 0; x < NUMBER_OF_SENSORS ; x++)
 	{
 		sensors[x].init(x);
@@ -447,7 +776,6 @@ void presentation()
 	{
 		sensors[x].presentSensor();
 	}
-#endif	
 }
 
 
@@ -467,12 +795,14 @@ void loop()
 	{
 		if (millis() - printTimeControl > 5000)
 		{
+#ifdef JMN_DEBUG_VERBOSE
 			Serial.print("Time: ");
 			Serial.print(hour());
 			Serial.print(":");
 			Serial.print(minute());
 			Serial.print(":");
 			Serial.println(second());
+#endif
 			printTimeControl = millis();
 		}
 
@@ -482,12 +812,11 @@ void loop()
 			requestedTimeControl = millis();
 		}
 
-#if 0
 		for (int x = 0; x < NUMBER_OF_SENSORS; x++)
 		{
 			sensors[x].run();
 		}
-#endif		
 	}
 }
+
 
