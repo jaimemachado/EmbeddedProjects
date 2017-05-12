@@ -42,6 +42,9 @@
 #define REFRESH_TIME 5
 #define POWER_METER_PRECISION 0.0001
 
+//TIME
+#define SYNC_CLOCK_PRERIOD_SEC 3600
+
 #define MY_DEBUG
 
 #define CALIBRATION_TYPE S_RGB_LIGHT
@@ -55,9 +58,10 @@
 
 #include "DataStoraManager.h"
 #include <EmonLib.h>
-#include "TimeLib.h"
+#include "TimeLibJMN.h"
+#include <TimeLib.h>
 
-#define CHILD_ID_S0 100              // Entrada de energia na casa max 90A
+#define CHILD_ID_S0 999              // Entrada de energia na casa max 90A
 #define GET_SENSOR_ADDRESS(X) CHILD_ID_S0 + X
 #define GET_SENSOR_ADDRESS_STOREDATA(X) (CHILD_ID_S0 + X + 20)
 #define GET_SENSOR_ARRAY_ID(X) X - CHILD_ID_S0 
@@ -76,12 +80,22 @@ EnergyMonitor emon;
 bool allinited = false;
 DataStoraManager dataManage(NUMBER_OF_SENSORS);
 
+
+//TIME
+bool timeInited = false;
+unsigned long requestedTimeControl = 0;
+time_t lastTimeUpdate;
+
+unsigned long printTimeControl = 0;
+
+int32_t testTime = 0;
+
 struct SensorsData
 {
 	double kwh;
 	double lastKWHSent;
 	
-	uint8_t id;
+	uint8_t id; 
 	MyMessage mysensorMsg;
 	double calibrations;
 	uint8_t status;
@@ -98,7 +112,7 @@ struct SensorsData
 		id = configID;
 		calibrations = 0.0;
 		status = SENSORSTATUS::NOT_PRESENTED;
-		lastUpdate = TimeLib::getCurrentTime();
+		lastUpdate = TimeLibJMN::getCurrentTime();
 		lastWattRead = 0;
 		numberOfAdds = 0;
 		accumulateKW = 0;
@@ -236,7 +250,7 @@ struct SensorsData
 		Serial.print(" NewValue:");
 		Serial.print(kwh);
 		Serial.println(" - WaitingKWH -> READY");
-		lastTimeRecalcKWH = TimeLib::getCurrentTime();
+		lastTimeRecalcKWH = TimeLibJMN::getCurrentTime();
 	}
 
 
@@ -247,12 +261,12 @@ struct SensorsData
 		numberOfAdds++;
 		if (numberOfAdds == NUMBER_READS_TO_UPDATE_KWH)
 		{
-			unsigned long milis = TimeLib::milliSecPassed(lastTimeRecalcKWH);
+			unsigned long milis = TimeLibJMN::milliSecPassed(lastTimeRecalcKWH);
 
 			tempKWH += ((accumulateKW / numberOfAdds)*milis);
 
 			accumulateKW = 0;
-			lastTimeRecalcKWH = TimeLib::getCurrentTime();
+			lastTimeRecalcKWH = TimeLibJMN::getCurrentTime();
 			numberOfAdds = 0;
 			Serial.print("TempKWH Sensor:");
 			Serial.print(id);
@@ -293,14 +307,14 @@ struct SensorsData
 
 	void SendData()
 	{
-		if (TimeLib::secPassed(lastUpdate) >= REFRESH_TIME)
+		if (TimeLibJMN::secPassed(lastUpdate) >= REFRESH_TIME)
 		{
 			mysensorMsg.setSensor(GetSensorAddress());
 			mysensorMsg.setType(V_WATT);
 			send(mysensorMsg.set(getLastWatt(), 2));
 			wait(100);
 
-			lastUpdate = TimeLib::getCurrentTime();
+			lastUpdate = TimeLibJMN::getCurrentTime();
 		}
 		if(kwh != lastKWHSent)
 		{
@@ -352,19 +366,19 @@ struct SensorsData
 			switch (status)
 			{
 			case SENSORSTATUS::WaitingKWH:
-				if (TimeLib::secPassed(lastUpdate) > 20)
+				if (TimeLibJMN::secPassed(lastUpdate) > 20)
 				{
 					request(GetSensorAddressStoreData(), KWH_STORE_TYPE);
-					lastUpdate = TimeLib::getCurrentTime();
+					lastUpdate = TimeLibJMN::getCurrentTime();
 					wait(200);
 				}
 				break;
 
 			case SENSORSTATUS::WaitingCALIBRATION:
-				if (TimeLib::secPassed(lastUpdate) > 5)
+				if (TimeLibJMN::secPassed(lastUpdate) > 5)
 				{
 					request(GetSensorAddressStoreData(), CALIBRATION_STORE_TYPE);
-					lastUpdate = TimeLib::getCurrentTime();
+					lastUpdate = TimeLibJMN::getCurrentTime();
 				}
 				break;
 			case SENSORSTATUS::READY:
@@ -381,12 +395,25 @@ struct SensorsData
 SensorsData sensors[NUMBER_OF_SENSORS];
 
 
-
+void updateTime()
+{
+	//Requesting Time
+	Serial.println("Time requested!");
+	requestTime();
+}
 
 
 void setup()
 {
 
+}
+
+void receiveTime(unsigned long ts)
+{
+	Serial.println("Time Received!");
+	setTime(ts);
+	timeInited = true;
+	lastTimeUpdate = now();
 }
 
 void receive(const MyMessage &message)
@@ -409,6 +436,7 @@ void receive(const MyMessage &message)
 
 void presentation()
 {
+#if 0
 	for(int x = 0; x < NUMBER_OF_SENSORS ; x++)
 	{
 		sensors[x].init(x);
@@ -419,7 +447,7 @@ void presentation()
 	{
 		sensors[x].presentSensor();
 	}
-	
+#endif	
 }
 
 
@@ -427,9 +455,39 @@ void presentation()
 
 void loop()
 {
-	for (int x = 0; x < NUMBER_OF_SENSORS; x++)
+	
+	if(timeInited == false)
 	{
-		sensors[x].run();
+		if(millis() - requestedTimeControl > 5000)
+		{
+			updateTime();
+			requestedTimeControl = millis();
+		}
+	}else
+	{
+		if (millis() - printTimeControl > 5000)
+		{
+			Serial.print("Time: ");
+			Serial.print(hour());
+			Serial.print(":");
+			Serial.print(minute());
+			Serial.print(":");
+			Serial.println(second());
+			printTimeControl = millis();
+		}
+
+		if((now() - lastTimeUpdate > SYNC_CLOCK_PRERIOD_SEC) && (millis() - requestedTimeControl > 5000) )
+		{
+			updateTime();
+			requestedTimeControl = millis();
+		}
+
+#if 0
+		for (int x = 0; x < NUMBER_OF_SENSORS; x++)
+		{
+			sensors[x].run();
+		}
+#endif		
 	}
 }
 

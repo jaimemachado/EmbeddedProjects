@@ -1,14 +1,14 @@
-// TimeLib.h
+// TimeLibJMN.h
 
-#ifndef _TIMELIB_h
-#define _TIMELIB_h
+#ifndef _TIMELIBJMN_h
+#define _TIMELIBJMN_h
 
 #if defined(ARDUINO) && ARDUINO >= 100
 	#include "arduino.h"
 #else
 	#include "WProgram.h"
 #endif
-class TimeLib
+class TimeLibJMN
 {
 public:
 	static unsigned long getCurrentTime();

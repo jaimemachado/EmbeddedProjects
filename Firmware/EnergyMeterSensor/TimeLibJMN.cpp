@@ -2,15 +2,15 @@
 // 
 // 
 
-#include "TimeLib.h"
+#include "TimeLibJMN.h"
 
 
-unsigned long TimeLib::getCurrentTime()
+unsigned long TimeLibJMN::getCurrentTime()
 {
 	return millis();
 }
 
-unsigned long TimeLib::milliSecPassed(unsigned long time)
+unsigned long TimeLibJMN::milliSecPassed(unsigned long time)
 {
 	unsigned long currentTime = getCurrentTime();
 
@@ -28,21 +28,21 @@ unsigned long TimeLib::milliSecPassed(unsigned long time)
 
 }
 
-unsigned long TimeLib::secPassed(unsigned long time)
+unsigned long TimeLibJMN::secPassed(unsigned long time)
 {
 	unsigned long millisecPassed = milliSecPassed(time);
 
 	return millisecPassed / 1000;
 }
 
-unsigned long TimeLib::minPassed(unsigned long time)
+unsigned long TimeLibJMN::minPassed(unsigned long time)
 {
 	unsigned long millisecPassed = milliSecPassed(time);
 
 	return millisecPassed / 60000;
 }
 
-unsigned long TimeLib::hoursPassed(unsigned long time)
+unsigned long TimeLibJMN::hoursPassed(unsigned long time)
 {
 	unsigned long millisecPassed = milliSecPassed(time);
 
