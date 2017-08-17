@@ -3,7 +3,6 @@
 // 
 
 #include "DataStoraManager.h"
-#include <EEPROMex.h>
 
 DataStoraManager::DataStoraManager(uint8_t numberSensor):numSensors(numberSensor)
 {

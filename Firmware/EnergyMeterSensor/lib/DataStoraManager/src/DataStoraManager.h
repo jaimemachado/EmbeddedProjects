@@ -12,6 +12,7 @@
 	#include "WProgram.h"
 #endif
 
+#include <EEPROMex.h>
 
 
 class DataStoraManager

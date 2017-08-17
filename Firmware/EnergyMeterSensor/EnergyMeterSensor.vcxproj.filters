@@ -24,7 +24,7 @@
     <ClInclude Include="DataStoraManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TimeLib.h">
+    <ClInclude Include="TimeLibJMN.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -32,7 +32,7 @@
     <ClCompile Include="DataStoraManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TimeLib.cpp">
+    <ClCompile Include="TimeLibJMN.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
