@@ -14,12 +14,7 @@
 #define CHILD_TEMP_HEAT_PUMP 1
 
 
-#define PIN_CONTRAST_LCD PB7
-
-
 U8G2_ST7920_128X64_F_SW_SPI  u8g2(U8G2_R0, /* clock=*/ PA0, /* data=*/ PA1, /* CS=*/ PA2, /* reset=*/ PA3);
-
-
 
 
 void presentation()
@@ -32,14 +27,12 @@ void presentation()
 }
 
 
-uint8_t contrast = 0;
 
 // the setup function runs once when you press reset or power the board
 void setup() {
     // initialize digital pin PB1 as an output.
     pinMode(PC13 , OUTPUT);
     pinMode(PB12 , OUTPUT);
-    pinMode(PIN_CONTRAST_LCD, OUTPUT);
     u8g2.begin();
   }
   
@@ -51,13 +44,10 @@ void setup() {
     delay(100);              // wait for a second
 
     digitalWrite(PB12 , HIGH);   // turn the LED on (HIGH is the voltage level)
+    delay(10);              // wait for a second
+    digitalWrite(PB12 , LOW);    // turn the LED off by making the voltage LOW
+    delay(10);     
 
-
-    analogWrite(PIN_CONTRAST_LCD, contrast);
-    //digitalWrite(PIN_CONTRAST_LCD , HIGH);   // turn the LED on (HIGH is the voltage level)
-    //pwmWrite(PIN_CONTRAST_LCD, 65535);
-
-    contrast +=10;
 
     u8g2.firstPage();
     do {

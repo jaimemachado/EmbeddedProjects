@@ -9,7 +9,7 @@ CountDown CD(CountDown::SECONDS);
 
 #define DELAY_TIME_SET_CONFIG 6
 
-heatpumpUI::heatpumpUI()
+heatpumpUI::heatpumpUI() : selectedMenu(MENU_SELECTED::NONE)
 {
     redraw = true;
     editingTemp = false;
@@ -75,7 +75,7 @@ void heatpumpUI::DrawCurrentTemperature()
 void heatpumpUI::DrawConfigTemperature()
 {
     display_->setFont(FONT_GENERAL_10PIXEL);
-    if( selectedMenu == MENU_SELECTED::TEMPERATURE)
+    if( selectedMenu == MENU_SELECTED(MENU_SELECTED::TEMPERATURE))
     {
         display_->setDrawColor(2);
         display_->setFontMode(1);
@@ -135,7 +135,7 @@ void heatpumpUI::DrawFanModeConfig()
 {
     display_->setFont(FONT_GENERAL_10PIXEL);
 
-    if( selectedMenu == MENU_SELECTED::FAN)
+    if( selectedMenu == MENU_SELECTED(MENU_SELECTED::FAN))
     {
         display_->setDrawColor(2);
         display_->setFontMode(1);
@@ -145,7 +145,7 @@ void heatpumpUI::DrawFanModeConfig()
     display_->setDrawColor(1);
     display_->setFontMode(1);
 
-    if( currentConfig.fan_mode == FAN_MODE::AUTO)
+    if( currentConfig.fan_mode == FAN_MODE(FAN_MODE::AUTO))
     {
         display_->setDrawColor(2);
         display_->setFontMode(1);
@@ -155,7 +155,7 @@ void heatpumpUI::DrawFanModeConfig()
     display_->setDrawColor(1);
     display_->setFontMode(1);
 
-    if( currentConfig.fan_mode == FAN_MODE::CONT)
+    if( currentConfig.fan_mode == FAN_MODE(FAN_MODE::CONT))
     {
         display_->setDrawColor(2);
         display_->setFontMode(1);
@@ -169,7 +169,7 @@ void heatpumpUI::DrawFanModeConfig()
 void heatpumpUI::DrawFanSpeedConfig()
 {
     display_->setFont(FONT_GENERAL_10PIXEL);
-    if( selectedMenu == MENU_SELECTED::FAN_SPEED)
+    if( selectedMenu == MENU_SELECTED(MENU_SELECTED::FAN_SPEED))
     {
         display_->setDrawColor(2);
         display_->setFontMode(1);
@@ -179,7 +179,7 @@ void heatpumpUI::DrawFanSpeedConfig()
     display_->setDrawColor(1);
     display_->setFontMode(1);
 
-    if( currentConfig.fan_speed == FAN_SPEED::SPPED_1 )
+    if( currentConfig.fan_speed == FAN_SPEED(FAN_SPEED::SPEED_1 ))
     {
         display_->setDrawColor(2);
         display_->setFontMode(1);
@@ -189,7 +189,7 @@ void heatpumpUI::DrawFanSpeedConfig()
     display_->setDrawColor(1);
     display_->setFontMode(1);
 
-    if( currentConfig.fan_speed == FAN_SPEED::SPPED_2 )
+    if( currentConfig.fan_speed == FAN_SPEED(FAN_SPEED::SPEED_2 ))
     {
         display_->setDrawColor(2);
         display_->setFontMode(1);
@@ -199,7 +199,7 @@ void heatpumpUI::DrawFanSpeedConfig()
     display_->setDrawColor(1);
     display_->setFontMode(1);
 
-    if( currentConfig.fan_speed == FAN_SPEED::SPPED_3 )
+    if( currentConfig.fan_speed == FAN_SPEED(FAN_SPEED::SPEED_3 ))
     {
         display_->setDrawColor(2);
         display_->setFontMode(1);
@@ -214,7 +214,7 @@ void heatpumpUI::DrawModeConfig()
 {
     display_->setFont(FONT_GENERAL_10PIXEL);
 
-    if( selectedMenu == MENU_SELECTED::COLD_HOT)
+    if( selectedMenu == MENU_SELECTED(MENU_SELECTED::COLD_HOT))
     {
         display_->setDrawColor(2);
         display_->setFontMode(1);
@@ -224,7 +224,7 @@ void heatpumpUI::DrawModeConfig()
     display_->setDrawColor(1);
     display_->setFontMode(1);
 
-    if( currentConfig.mode == PUMP_MODE::COLD)
+    if( currentConfig.mode == PUMP_MODE(PUMP_MODE::COLD))
     {
         display_->setDrawColor(2);
         display_->setFontMode(1);
@@ -234,7 +234,7 @@ void heatpumpUI::DrawModeConfig()
     display_->setDrawColor(1);
     display_->setFontMode(1);
 
-    if( currentConfig.mode == PUMP_MODE::HOT)
+    if( currentConfig.mode == PUMP_MODE(PUMP_MODE::HOT))
     {
         display_->setDrawColor(2);
         display_->setFontMode(1);
@@ -248,7 +248,7 @@ void heatpumpUI::DrawModeConfig()
 void heatpumpUI::DrawRoomConfig()
 {
     display_->setFont(FONT_GENERAL_10PIXEL);
-    if( selectedMenu == MENU_SELECTED::ROOM)
+    if( selectedMenu == MENU_SELECTED(MENU_SELECTED::ROOM))
     {
         display_->setDrawColor(2);
         display_->setFontMode(1);
@@ -258,7 +258,7 @@ void heatpumpUI::DrawRoomConfig()
     display_->setDrawColor(1);
     display_->setFontMode(1);
 
-    if( currentConfig.room == CONFIGURED_ROOM::BEDROOM )
+    if( currentConfig.room == CONFIGURED_ROOM(CONFIGURED_ROOM::BEDROOM ))
     {
         display_->setDrawColor(2);
         display_->setFontMode(1);
@@ -268,7 +268,7 @@ void heatpumpUI::DrawRoomConfig()
     display_->setDrawColor(1);
     display_->setFontMode(1);
 
-    if( currentConfig.room == CONFIGURED_ROOM::LIVING_ROOM )
+    if( currentConfig.room == CONFIGURED_ROOM(CONFIGURED_ROOM::LIVING_ROOM ))
     {
         display_->setDrawColor(2);
         display_->setFontMode(1);
@@ -278,7 +278,7 @@ void heatpumpUI::DrawRoomConfig()
     display_->setDrawColor(1);
     display_->setFontMode(1);
 
-    if( currentConfig.room == CONFIGURED_ROOM::OFFICE )
+    if( currentConfig.room == CONFIGURED_ROOM(CONFIGURED_ROOM::OFFICE ))
     {
         display_->setDrawColor(2);
         display_->setFontMode(1);

@@ -5,42 +5,116 @@
 
 #include <DebouncedInput.h>
 #include <CountDown.h>
-enum class FAN_MODE
+struct FAN_MODE
 {
-    AUTO,
-    CONT
+    enum Type
+    {
+        AUTO, 
+        CONT
+    };
+    Type t_;
+    FAN_MODE(Type t) : t_(t) {}
+    operator Type () const {return t_;}
+    
+    bool operator==(const FAN_MODE& other) const
+    {
+        return t_ == other.t_;
+    }
+private:
+   //prevent automatic conversion for any other built-in types such as bool, int, etc
+   template<typename T>
+    operator T () const;
 };
 
-enum class FAN_SPEED
+struct PUMP_MODE
 {
-    SPPED_1,
-    SPPED_2,
-    SPPED_3
+    enum Type
+    {
+        COLD, 
+        HOT
+    };
+    Type t_;
+    PUMP_MODE(Type t) : t_(t) {}
+    operator Type () const {return t_;}
+
+    bool operator==(const PUMP_MODE& other) const
+    {
+        return t_ == other.t_;
+    }
+private:
+   //prevent automatic conversion for any other built-in types such as bool, int, etc
+   template<typename T>
+    operator T () const;
 };
 
-enum class PUMP_MODE
+struct CONFIGURED_ROOM
 {
-    COLD,
-    HOT
+    enum Type
+    {
+        BEDROOM, 
+        LIVING_ROOM, 
+        OFFICE  
+    };
+    Type t_;
+    CONFIGURED_ROOM(Type t) : t_(t) {}
+    operator Type () const {return t_;}
+
+    bool operator==(const CONFIGURED_ROOM& other) const
+    {
+        return t_ == other.t_;
+    }
+private:
+   //prevent automatic conversion for any other built-in types such as bool, int, etc
+   template<typename T>
+    operator T () const;
 };
 
-enum class CONFIGURED_ROOM
+
+struct FAN_SPEED
 {
-    BEDROOM,
-    LIVING_ROOM,
-    OFFICE   
+    enum Type
+    {
+        SPEED_1,
+        SPEED_2,
+        SPEED_3
+    };
+    Type t_;
+    FAN_SPEED(Type t) : t_(t) {}
+    operator Type () const {return t_;}
+
+    bool operator==(const FAN_SPEED& other) const
+    {
+        return t_ == other.t_;
+    }
+private:
+   //prevent automatic conversion for any other built-in types such as bool, int, etc
+   template<typename T>
+    operator T () const;
 };
 
-enum class MENU_SELECTED
+struct MENU_SELECTED
 {
-    NONE,
-    TEMPERATURE,
-    FAN,
-    FAN_SPEED,
-    COLD_HOT,
-    ROOM,
-    LAST
+    enum Type
+    {
+        NONE,
+        TEMPERATURE,
+        FAN,
+        FAN_SPEED,
+        COLD_HOT,
+        ROOM,
+        LAST
+    };
+    Type t_;
+    MENU_SELECTED(Type t) : t_(t) {}
+    operator Type () const {return t_;}
+
+    bool operator==(const MENU_SELECTED& other) const
+    {
+        return t_ == other.t_;
+    }
 };
+
+
 
 struct HeatPumpStatus
 {
@@ -64,14 +138,14 @@ struct HeatPumpConfig
     PUMP_MODE mode;
     CONFIGURED_ROOM room;
 
-    HeatPumpConfig()
+    HeatPumpConfig() : fan_mode(FAN_MODE::AUTO), fan_speed(FAN_SPEED::SPEED_1), mode(PUMP_MODE::COLD), room(CONFIGURED_ROOM::BEDROOM)
     {
         arconON = false;
         temperature = 25.45;
-        fan_mode = FAN_MODE::AUTO;
-        fan_speed = FAN_SPEED::SPPED_1;
-        mode = PUMP_MODE::COLD;
-        room = CONFIGURED_ROOM::BEDROOM;
+        //fan_mode = FAN_MODE::AUTO;
+        //fan_speed = FAN_SPEED::SPPED_1;
+        //mode = PUMP_MODE::COLD;
+        //room = CONFIGURED_ROOM::BEDROOM;
     }
 
     bool operator==(const HeatPumpConfig& other) const

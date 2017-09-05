@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "gdb",
+            "request": "launch",
+            "cwd": "${workspaceRoot}",
+            "name": "PlatformIO Debugger",
+            "target": "d:/Projects/HomeNetworkMySensors/Firmware/STM32/TestStm32/.pioenvs/genericSTM32F103C8/firmware.elf",
+            "gdbpath": "C:/Users/Jaime/.platformio/penv/Scripts/piodebuggdb",
+            "autorun": [ "source .pioinit" ]
+        }
+    ]
+}

@@ -1,0 +1,3 @@
+[submodule "Firmware/Libraries/External/MySensors"]
+	path = Firmware/Libraries/External/MySensors
+	url = https://github.com/mysensors/MySensors.git
